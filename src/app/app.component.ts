@@ -1,5 +1,6 @@
 import {Component, HostListener} from '@angular/core';
 import {FormBuilder, Validators} from "@angular/forms";
+import {AppService} from "./app.service";
 
 @Component({
   selector: 'app-root',
@@ -13,74 +14,80 @@ export class AppComponent {
     car: ['', Validators.required],
   });
 
-  carsData = [
-    {
-      image: '1.png',
-      name: 'Lamborghini Huracan Spyder',
-      transmission: 'автомат',
-      engine: 5.2,
-      year: '2019',
-    },
-    {
-      image: '2.png',
-      name: 'Chevrolet Corvette',
-      transmission: 'автомат',
-      engine: 3.9,
-      year: '2017',
-    },
-    {
-      image: '3.png',
-      name: 'Ferrari California',
-      transmission: 'автомат',
-      engine: 6.2,
-      year: '2018',
-    },
-    {
-      image: '4.png',
-      name: 'Lamborghini Urus',
-      transmission: 'автомат',
-      engine: 4.0,
-      year: '2019',
-    },
-    {
-      image: '5.png',
-      name: 'Audi R8',
-      transmission: 'автомат',
-      engine: 5.2,
-      year: '2018',
-    },
-    {
-      image: '6.png',
-      name: 'Chevrolet Camaro',
-      transmission: 'автомат',
-      engine: 2.0,
-      year: '2019',
-    },
-    {
-      image: '7.png',
-      name: 'Maserati Quattroporte',
-      transmission: 'автомат',
-      engine: 3.0,
-      year: '2018',
-    },
-    {
-      image: '8.png',
-      name: 'Dodge Challenger',
-      transmission: 'автомат',
-      engine: 6.4,
-      year: '2019',
-    },
-    {
-      image: '9.png',
-      name: 'Nissan GT-R',
-      transmission: 'автомат',
-      engine: 3.8,
-      year: '2019',
-    },
-  ];
+  carsData: any;
+  // carsData = [
+  //   {
+  //     image: '1.png',
+  //     name: 'Lamborghini Huracan Spyder',
+  //     transmission: 'автомат',
+  //     engine: 5.2,
+  //     year: '2019',
+  //   },
+  //   {
+  //     image: '2.png',
+  //     name: 'Chevrolet Corvette',
+  //     transmission: 'автомат',
+  //     engine: 3.9,
+  //     year: '2017',
+  //   },
+  //   {
+  //     image: '3.png',
+  //     name: 'Ferrari California',
+  //     transmission: 'автомат',
+  //     engine: 6.2,
+  //     year: '2018',
+  //   },
+  //   {
+  //     image: '4.png',
+  //     name: 'Lamborghini Urus',
+  //     transmission: 'автомат',
+  //     engine: 4.0,
+  //     year: '2019',
+  //   },
+  //   {
+  //     image: '5.png',
+  //     name: 'Audi R8',
+  //     transmission: 'автомат',
+  //     engine: 5.2,
+  //     year: '2018',
+  //   },
+  //   {
+  //     image: '6.png',
+  //     name: 'Chevrolet Camaro',
+  //     transmission: 'автомат',
+  //     engine: 2.0,
+  //     year: '2019',
+  //   },
+  //   {
+  //     image: '7.png',
+  //     name: 'Maserati Quattroporte',
+  //     transmission: 'автомат',
+  //     engine: 3.0,
+  //     year: '2018',
+  //   },
+  //   {
+  //     image: '8.png',
+  //     name: 'Dodge Challenger',
+  //     transmission: 'автомат',
+  //     engine: 6.4,
+  //     year: '2019',
+  //   },
+  //   {
+  //     image: '9.png',
+  //     name: 'Nissan GT-R',
+  //     transmission: 'автомат',
+  //     engine: 3.8,
+  //     year: '2019',
+  //   },
+  // ];
 
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private appService: AppService) {
+  }
+
+  ngOnInit() {
+    this.appService.getData(this.category).subscribe(carsData => this.carsData = carsData);
+
   }
 
   goScroll(target: HTMLElement, car?: any) {
@@ -95,21 +102,37 @@ export class AppComponent {
   }
 
   trans: any;
+
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(e: MouseEvent) {
     this.trans = {transform: 'translate3d(' + ((e.clientX * 0.3) / 8) + 'px,' + ((e.clientY * 0.3) / 8) + 'px,0px)'};
   }
 
   bgPos: any;
+
   @HostListener('document:scroll', ['$event'])
   onScroll() {
     this.bgPos = {backgroundPositionX: '0' + (0.3 * window.scrollY) + 'px'};
   }
 
+  category: string = 'sport';
+  toggleCategory(category: string) {
+    this.category = category;
+    this.ngOnInit();
+  }
+
   onSubmit() {
     if (this.priceForm.valid) {
-      alert('Cпасибо за заявку, мы свяжемся с вами вы ближайшее время!');
-      this.priceForm.reset();
+      this.appService.sendQuery(this.priceForm.value)
+        .subscribe({
+          next: (response: any) => {
+            alert(response.message);
+            this.priceForm.reset();
+          },
+          error: (response: any) => {
+            alert(response.error.message);
+          }
+        })
     }
   }
 
